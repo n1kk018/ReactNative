@@ -7,7 +7,7 @@ import {
   TextInput,
   Button,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
 } from 'react-native'
 
 class Search extends React.Component {
@@ -18,7 +18,7 @@ class Search extends React.Component {
     this.totalPages = 0 // Nombre de pages totales pour savoir si on a atteint la fin des retours de l'API TMDB
     this.state = {
       films: [],
-      isLoading: false // Par défaut à false car il n'y a pas de chargement tant qu'on ne lance pas de recherche
+      isLoading: false, // Par défaut à false car il n'y a pas de chargement tant qu'on ne lance pas de recherche
     }
     // this._films = []
     // console.log(this._films);
@@ -27,6 +27,45 @@ class Search extends React.Component {
   //   _loadFilms() {
   //     getFilmsFromApiWithSearchtext('star').then(data => console.log(data));
   //   }
+
+  _loadFilms() {
+    if (this.searchedText.length > 0) {
+      this.setState({ isLoading: true }) // Lancement du chargement
+      getFilmsFromApiWithSearchtext(this.searchedText, this.page + 1).then(
+        (data) => {
+          this.page = data.page
+          this.totalPages = data.totalPages
+          this.setState({
+            films: [...this.state.films, ...data.results], // ou this.state.films.concat(data.results)
+            isLoading: false, // Arrêt du chargement
+          })
+        },
+      )
+    }
+  }
+
+  _searchTextInputChanged(text) {
+    this.searchedText = text
+  }
+
+  _searchFilms() {
+    // On remet à zéro les films de notre state
+    this.page = 0
+    this.totalPages = 0
+    this.setState(
+      {
+        films: [],
+      },
+      () => {
+        this._loadFilms()
+      },
+    )
+  }
+  _displayDetailForFilm = (idFilm) => {
+    // console.log('Display film with id ' + idFilm)
+    this.props.navigation.navigate('FilmDetail', { idFilm: idFilm })
+  }
+
   _displayLoading() {
     if (this.state.isLoading) {
       return (
@@ -37,47 +76,8 @@ class Search extends React.Component {
     }
   }
 
-  _searchFilms() {
-    // Ici on va remettre à zéro les films de notre state
-    this.page = 0
-    this.totalPages = 0
-    this.setState({
-      films: []
-    })
-    // J'utilise le paramètre length sur mon tableau de films pour vérifier qu'il y a bien 0 film
-    console.log(
-      'Page : ' +
-        this.page +
-        ' / TotalPages : ' +
-        this.totalPages +
-        ' / Nombre de films : ' +
-        this.state.films.length
-    )
-    this._loadFilms()
-  }
-
-  _loadFilms() {
-    if (this.searchedText.length > 0) {
-      this.setState({ isLoading: true }) // Lancement du chargement
-      getFilmsFromApiWithSearchtext(this.searchedText, this.page + 1).then(
-        (data) => {
-          this.page = data.page
-          this.totalPages = data.totalPages
-          this.setState({
-            films: [...this.state.films, ...data.results],
-            isLoading: false // Arrêt du chargement
-          })
-        }
-      )
-    }
-  }
-
-  _searchTextInputChanged(text) {
-    this.searchedText = text
-  }
-
   render() {
-    // console.log(this.state.isLoading)
+    // console.log(this.props)
     return (
       <View style={styles.main_container}>
         <TextInput
@@ -91,14 +91,19 @@ class Search extends React.Component {
           // data={this._films}
           data={this.state.films}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <FilmItem film={item} />}
+          renderItem={({ item }) => (
+            <FilmItem
+              film={item}
+              displayDetailForFilm={this._displayDetailForFilm}
+            />
+          )}
           onEndReachedThreshold={0.5}
           onEndReached={() => {
-            console.log('onEndReached')
-            if (this.page < this.totalPages) {
-              // On vérifie qu'on n'a pas atteint la fin de la pagination (totalPages) avant de charger plus d'éléments
-              this._loadFilms()
-            }
+            // console.log('onEndReached')
+            // if (this.page < this.totalPages) {
+            // On vérifie qu'on n'a pas atteint la fin de la pagination (totalPages) avant de charger plus d'éléments
+            this._loadFilms()
+            // }
           }}
         />
         {this._displayLoading()}
@@ -110,7 +115,6 @@ class Search extends React.Component {
 const styles = StyleSheet.create({
   main_container: {
     flex: 1,
-    marginTop: 20
   },
   textinput: {
     marginLeft: 5,
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderColor: '#000000',
     borderWidth: 1,
-    paddingLeft: 5
+    paddingLeft: 5,
   },
   loading_container: {
     position: 'absolute',
@@ -127,8 +131,8 @@ const styles = StyleSheet.create({
     top: 100,
     bottom: 0,
     alignItems: 'center',
-    justifyContent: 'center'
-  }
+    justifyContent: 'center',
+  },
 })
 
 export default Search
