@@ -4,8 +4,7 @@ import { getImageFromApi } from '../API/TMDBApi'
 
 class FilmItem extends React.Component {
   render() {
-    // console.log(this.props);
-    const { film, displayDetailForFilm } = this.props
+    const { displayDetailForFilm, film } = this.props
     // ES5 :
     // const film = this.props.film
     // const displayDetailForFilm = this.props.displayDetailForFilm

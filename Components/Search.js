@@ -20,13 +20,7 @@ class Search extends React.Component {
       films: [],
       isLoading: false, // Par défaut à false car il n'y a pas de chargement tant qu'on ne lance pas de recherche
     }
-    // this._films = []
-    // console.log(this._films);
   }
-
-  //   _loadFilms() {
-  //     getFilmsFromApiWithSearchtext('star').then(data => console.log(data));
-  //   }
 
   _loadFilms() {
     if (this.searchedText.length > 0) {
@@ -62,7 +56,6 @@ class Search extends React.Component {
     )
   }
   _displayDetailForFilm = (idFilm) => {
-    // console.log('Display film with id ' + idFilm)
     this.props.navigation.navigate('FilmDetail', { idFilm: idFilm })
   }
 
@@ -77,7 +70,6 @@ class Search extends React.Component {
   }
 
   render() {
-    // console.log(this.props)
     return (
       <View style={styles.main_container}>
         <TextInput

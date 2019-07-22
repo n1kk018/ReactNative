@@ -1,8 +1,16 @@
 const API_TOKEN = 'f14da520e67fc67c2963fa0262f3b873'
+const API_BASE_URL = 'https://api.themoviedb.org/3/'
 
 export function getFilmsFromApiWithSearchtext(text, page) {
-  const url = 'https://api.themoviedb.org/3/search/movie?api_key=' + API_TOKEN + '&language=fr&query=' + text + '&page=' + page
+  let url = API_BASE_URL + 'search/movie?api_key=' + API_TOKEN + '&language=fr&query=' + text + '&page=' + page
   return fetch(url)
+    .then((response) => response.json())
+    .catch((error) => console.error(error))
+}
+
+export function getFilmDetailFromApi (id) {
+  let url = API_BASE_URL + 'movie/'+ id + '?api_key=' + API_TOKEN + '&language=fr'
+  return fetch (url)
     .then((response) => response.json())
     .catch((error) => console.error(error))
 }
