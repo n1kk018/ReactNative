@@ -1,38 +1,39 @@
+// Components/Search.js
+
 import React from "react";
-import FilmItem from "./FilmItem";
-import { getFilmsFromApiWithSearchtext } from "../API/TMDBApi";
 import {
   StyleSheet,
   View,
   TextInput,
   Button,
-  FlatList,
   ActivityIndicator
 } from "react-native";
-import { connect } from "react-redux";
+import FilmList from "./FilmList";
+import { getFilmsFromApiWithSearchedText } from "../API/TMDBApi";
 
 class Search extends React.Component {
   constructor(props) {
     super(props);
-    this.searchedText = ""; // Initialisation de notre donnée searchedText en dehors du state
+    this.searchedText = "";
     this.page = 0;
-    this.totalPages = 0; // Nombre de pages totales pour savoir si on a atteint la fin des retours de l'API TMDB
+    this.totalPages = 0;
     this.state = {
       films: [],
-      isLoading: false // Par défaut à false car il n'y a pas de chargement tant qu'on ne lance pas de recherche
+      isLoading: false
     };
+    this._loadFilms = this._loadFilms.bind(this);
   }
 
   _loadFilms() {
     if (this.searchedText.length > 0) {
-      this.setState({ isLoading: true }); // Lancement du chargement
-      getFilmsFromApiWithSearchtext(this.searchedText, this.page + 1).then(
+      this.setState({ isLoading: true });
+      getFilmsFromApiWithSearchedText(this.searchedText, this.page + 1).then(
         data => {
           this.page = data.page;
-          this.totalPages = data.totalPages;
+          this.totalPages = data.total_pages;
           this.setState({
-            films: [...this.state.films, ...data.results], // ou this.state.films.concat(data.results)
-            isLoading: false // Arrêt du chargement
+            films: [...this.state.films, ...data.results],
+            isLoading: false
           });
         }
       );
@@ -44,7 +45,6 @@ class Search extends React.Component {
   }
 
   _searchFilms() {
-    // On remet à zéro les films de notre state
     this.page = 0;
     this.totalPages = 0;
     this.setState(
@@ -56,7 +56,9 @@ class Search extends React.Component {
       }
     );
   }
+
   _displayDetailForFilm = idFilm => {
+    console.log("Display film with id " + idFilm);
     this.props.navigation.navigate("FilmDetail", { idFilm: idFilm });
   };
 
@@ -70,7 +72,6 @@ class Search extends React.Component {
     }
   }
 
-
   render() {
     return (
       <View style={styles.main_container}>
@@ -81,25 +82,13 @@ class Search extends React.Component {
           onSubmitEditing={() => this._searchFilms()}
         />
         <Button title="Rechercher" onPress={() => this._searchFilms()} />
-        <FlatList
-          data={this.state.films}
-          keyExtractor={item => item.id.toString()}
-          extraData={this.props.favoritesFilm}
-          renderItem={({ item }) => (
-            <FilmItem
-              film={item}
-              displayDetailForFilm={this._displayDetailForFilm}
-              isFilmFavorite={(this.props.favoritesFilm.findIndex(film => film.id === item.id) !== -1) ? true : false}
-            />
-          )}
-          onEndReachedThreshold={0.5}
-          onEndReached={() => {
-            // console.log('onEndReached')
-            // if (this.page < this.totalPages) {
-            // On vérifie qu'on n'a pas atteint la fin de la pagination (totalPages) avant de charger plus d'éléments
-            this._loadFilms();
-            // }
-          }}
+        <FilmList
+          films={this.state.films}
+          navigation={this.props.navigation}
+          loadFilms={this._loadFilms}
+          page={this.page}
+          totalPages={this.totalPages}
+          favoriteList={false}
         />
         {this._displayLoading()}
       </View>
@@ -130,10 +119,4 @@ const styles = StyleSheet.create({
   }
 });
 
-const mapStateToProps = state => {
-  return {
-    favoritesFilm: state.favoritesFilm
-  };
-};
-
-export default connect(mapStateToProps)(Search);
+export default Search;
